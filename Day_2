@@ -1,0 +1,40 @@
+Ques:-create table list (id varchar(5));
+insert into list values ('a');
+insert into list values ('a');
+insert into list values ('b');
+insert into list values ('c');
+insert into list values ('c');
+insert into list values ('c');
+insert into list values ('d');
+insert into list values ('d');
+insert into list values ('e');
+
+
+Sol:-
+with cte as(
+select *,dense_rank()over(order by id) as r
+from list ) ,
+cte2 as(
+select * from list 
+group by id
+having count(id)=1)
+
+select id , 
+case when id in (select id from cte2) 
+then 'Null'
+ when r=1
+then concat('DUPL',r)
+else CONCAT('DUPL',r-1)  
+end as  v
+from cte
+
+Output:-
+a	DUPL1
+a	DUPL1
+b	Null
+c	DUPL2
+c	DUPL2
+c	DUPL2
+d	DUPL3
+d	DUPL3
+e	Null
