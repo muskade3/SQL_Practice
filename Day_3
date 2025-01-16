@@ -1,0 +1,22 @@
+Ques:-
+create table mode 
+(
+id int
+);
+
+insert into mode values (1),(2),(2),(3),(3),(3),(3),(4),(5);
+
+
+Solution 
+
+with cte as(
+SELECT ID , COUNT(*) AS cm 
+from mode 
+group by id)
+select id from cte 
+where cm=(select max(cm) from cte)
+
+
+ans :-
+id
+3
