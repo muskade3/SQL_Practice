@@ -1,0 +1,14 @@
+Medain 
+
+with cte as(
+select * ,rank()over(order by id) as rn, count(id) over() as c
+from mode)
+select
+distinct(
+case when c%2!=0
+then (select id from cte where rn=(c/2)+1) 
+else
+(select avg(id) from cte where rn=(c/2)+1 or rn =(c/2))
+end )as median 
+from cte
+
