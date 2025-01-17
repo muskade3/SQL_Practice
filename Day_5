@@ -1,0 +1,47 @@
+Ques:- 
+create table emp_2020
+(
+emp_id int,
+designation varchar(20)
+);
+
+create table emp_2021
+(
+emp_id int,
+designation varchar(20)
+)
+
+insert into emp_2020 values (1,'Trainee'), (2,'Developer'),(3,'Senior Developer'),(4,'Manager');
+insert into emp_2021 values (1,'Developer'), (2,'Developer'),(3,'Manager'),(5,'Trainee');
+
+
+Sol:-
+ with cte as(
+ select e.emp_id as id1 , e.designation as des1, e1. emp_id as id2 , e1. designation as des2
+ from emp_2020 e full outer join
+ emp_2021 e1 
+ on e.emp_id=e1.emp_id ),
+ cte2 as(
+ select id1,id2 , des1, des2,
+ case when des1 !=des2 and des2 is not null and des1 is not null
+   then 'Promoted'
+ when  des1  is not  null  and des2 is  null
+  then 'Resigned'
+ when  des1 is null  and des2 is not NULL
+then 'New'
+end as newcol
+from cte)
+select 
+ case when id1 is null  and id2 is not null
+ then id2
+ when id2 is null  and id1 is not null
+ then id1
+ else id1 end as id,
+ newcol from cte2 where newcol is not null
+
+Output:-
+1	Promoted
+3	Promoted
+4	Resigned
+5	New
+
