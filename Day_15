@@ -1,0 +1,28 @@
+create table players_location
+(
+name varchar(20),
+city varchar(20)
+);
+delete from players_location;
+insert into players_location
+values ('Sachin','Mumbai'),('Virat','Delhi') , ('Rahul','Bangalore'),('Rohit','Mumbai'),('Mayank','Bangalore');
+
+
+
+with cte as(
+ select *, dense_rank() over(partition by city order by name ) as rn
+ from players_location),
+ cte2 as(
+ select case when city='Bangalore' then name  end as
+'Bangalore',case when city='Mumbai' then name  end as
+'Mumbai', case when city='Delhi' then name  end as
+'Delhi' ,rn from cte 
+order by rn , 'Bangalore','Mumbai','Delhi')
+select max(bangalore) as Bangalore, max(mumbai) as Mumbai, max(delhi) as 
+Delhi
+from cte2 group by rn
+
+
+Bangalore	Mumbai	Delhi
+Mayank	Rohit	Virat
+Rahul	Sachin	
