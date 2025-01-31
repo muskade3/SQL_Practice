@@ -1,0 +1,42 @@
+Create table  Trips (id int, client_id int, driver_id int, city_id int, status varchar(50), request_at varchar(50));
+Create table Users (users_id int, banned varchar(50), role varchar(50));
+Truncate table Trips;
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('1', '1', '10', '1', 'completed', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('2', '2', '11', '1', 'cancelled_by_driver', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('3', '3', '12', '6', 'completed', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('4', '4', '13', '6', 'cancelled_by_client', '2013-10-01');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('5', '1', '10', '1', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('6', '2', '11', '6', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('7', '3', '12', '6', 'completed', '2013-10-02');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('8', '2', '12', '12', 'completed', '2013-10-03');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('9', '3', '10', '12', 'completed', '2013-10-03');
+insert into Trips (id, client_id, driver_id, city_id, status, request_at) values ('10', '4', '13', '12', 'cancelled_by_driver', '2013-10-03');
+Truncate table Users;
+insert into Users (users_id, banned, role) values ('1', 'No', 'client');
+insert into Users (users_id, banned, role) values ('2', 'Yes', 'client');
+insert into Users (users_id, banned, role) values ('3', 'No', 'client');
+insert into Users (users_id, banned, role) values ('4', 'No', 'client');
+insert into Users (users_id, banned, role) values ('10', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('11', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('12', 'No', 'driver');
+insert into Users (users_id, banned, role) values ('13', 'No', 'driver');
+
+
+with cte as(
+  select client_id, driver_id ,status,request_at,
+  u.banned as cb,u.role as cr ,u1.banned as db, u1.role  as dr,u.users_id as cu,u1.users_id as du from trips t
+ inner join users u on t.client_id=u.users_id
+ inner join users u1 on t.driver_id=u1.users_id),
+ cte2 as(
+ select * from cte 
+ where cb='No' and  db='No' )
+ select request_at, count(*) as tot, 
+ sum(case when status='cancelled_by_client' or  status= 'cancelled_by_driver' then 1 else 0 end) as can,
+ 1.0*sum(case when status='cancelled_by_client' or  status= 'cancelled_by_driver' then 1 else 0 end)/count(*)*100 as canper
+ from cte2 group by request_at
+
+
+request_at	tot	can	canper
+2013-10-01	3	1	33.33333333333333
+2013-10-02	2	0	0
+2013-10-03	2	1	50
