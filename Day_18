@@ -1,0 +1,28 @@
+
+Question:-
+create table tasks (
+date_value date,
+state varchar(10)
+);
+
+insert into tasks  values ('2019-01-01','success'),('2019-01-02','success'),('2019-01-03','success'),('2019-01-04','fail')
+,('2019-01-05','fail'),('2019-01-06','success')
+
+Sol:-
+with cte as(
+select *,
+ rank() over(partition by state order by date_value ) as rn ,
+ row_number() over(order by date_value ) as rownum,
+   row_number() over(order by date_value )-rank() over(partition by state order by date_value ) as gup
+ from tasks
+)
+ select min(date_value) as firstdate, max(date_value) as lastdate ,state
+ from cte 
+ group by gup ,state
+ order by firstdate
+
+Output:-
+  firstdate   lastdate   state
+2019-01-01	2019-01-03	success
+2019-01-04	2019-01-05	fail
+2019-01-06	2019-01-06	success
