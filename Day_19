@@ -1,0 +1,46 @@
+Ques:- create table bms (seat_no int ,is_empty varchar(10));
+insert into bms values
+(1,'N')
+,(2,'Y')
+,(3,'N')
+,(4,'Y')
+,(5,'Y')
+,(6,'Y')
+,(7,'N')
+,(8,'Y')
+,(9,'Y')
+,(10,'Y')
+,(11,'Y')
+,(12,'N')
+,(13,'Y')
+,(14,'Y');
+
+
+Sol:-
+with cte as(
+select * ,lead(is_empty ,1) over(order by seat_no) as c1,
+lead(is_empty,2)over(order by seat_no) as c2 ,
+lag(is_empty, 1)over(order by seat_no) as cg,
+lag(is_empty, 2)over(order by seat_no) as cg1
+from bms),
+cte2 as(
+select seat_no , case when is_empty='Y' AND c1='Y' AND c2='Y'
+THEN 1 
+WHEN is_empty='Y' AND c1='Y' AND cg='Y'
+then 1 
+ when is_empty='Y'  AND cg='Y'  and cg1='Y'
+ THEN 1 
+ else 0 end as C
+ from cte)
+ select seat_no from cte2 where c=1
+
+
+Output:-
+Seat_no
+4
+5
+6
+8
+9
+10
+11
