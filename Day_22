@@ -1,0 +1,146 @@
+Script-Video 51
+CREATE TABLE booking_table(
+   Booking_id       VARCHAR(3) NOT NULL 
+  ,Booking_date     date NOT NULL
+  ,User_id          VARCHAR(2) NOT NULL
+  ,Line_of_business VARCHAR(6) NOT NULL
+);
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b1','2022-03-23','u1','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b2','2022-03-27','u2','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b3','2022-03-28','u1','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b4','2022-03-31','u4','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b5','2022-04-02','u1','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b6','2022-04-02','u2','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b7','2022-04-06','u5','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b8','2022-04-06','u6','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b9','2022-04-06','u2','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b10','2022-04-10','u1','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b11','2022-04-12','u4','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b12','2022-04-16','u1','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b13','2022-04-19','u2','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b14','2022-04-20','u5','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b15','2022-04-22','u6','Flight');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b16','2022-04-26','u4','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b17','2022-04-28','u2','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b18','2022-04-30','u1','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b19','2022-05-04','u4','Hotel');
+INSERT INTO booking_table(Booking_id,Booking_date,User_id,Line_of_business) VALUES ('b20','2022-05-06','u1','Flight');
+;
+CREATE TABLE user_table(
+   User_id VARCHAR(3) NOT NULL
+  ,Segment VARCHAR(2) NOT NULL
+);
+INSERT INTO user_table(User_id,Segment) VALUES ('u1','s1');
+INSERT INTO user_table(User_id,Segment) VALUES ('u2','s1');
+INSERT INTO user_table(User_id,Segment) VALUES ('u3','s1');
+INSERT INTO user_table(User_id,Segment) VALUES ('u4','s2');
+INSERT INTO user_table(User_id,Segment) VALUES ('u5','s2');
+INSERT INTO user_table(User_id,Segment) VALUES ('u6','s3');
+INSERT INTO user_table(User_id,Segment) VALUES ('u7','s3');
+INSERT INTO user_table(User_id,Segment) VALUES ('u8','s3');
+INSERT INTO user_table(User_id,Segment) VALUES ('u9','s3');
+INSERT INTO user_table(User_id,Segment) VALUES ('u10','s3');
+
+
+
+Solution:1
+with cte as(
+Select b.* , segment from booking_table b join
+user_table u on b.user_id=u.user_id
+where line_of_business='Flight' and booking_date like '2022-04%'),
+cte2 as(
+select segment,  user_id, count(*) as flight2022
+from cte 
+group by segment ,user_id),
+cte4 as(
+select segment , count(*) as totflightuser
+from cte2
+group by segment),
+cte5 as(
+select segment ,count(*) as totaluser
+from user_table group by segment )
+select c1.segment , totaluser,totflightuser
+from cte4 c1 join cte5 c2 ON
+c1.segment=c2.segment
+
+
+
+
+with cte as(
+Select b.* , segment from booking_table b join
+user_table u on b.user_id=u.user_id
+where line_of_business='Flight' and booking_date like '2022-04%'),
+cte2 as(
+select segment, count (distinct user_id) as flight2022
+from cte 
+group by segment),
+cte3 as(
+select segment ,count(*) as totaluser
+from user_table group by segment )
+select c1.segment , totaluser,flight2022
+from cte3 c1 join cte2 c2 ON
+c1.segment=c2.segment
+
+Output:-
+segement ,totaluser, totflightuser
+s1	3	2 
+s2	2	2
+s3	5	1
+
+
+
+Solution:2
+with cte as(
+select * ,rank() over(partition by user_id  order by booking_date) as rn
+from  booking_table)
+select * from cte
+where rn=1 and line_of_business='Hotel'
+
+
+
+
+
+Output:-
+b8	2022-04-06	u6	Hotel	1
+
+
+
+Solution3:-
+
+with cte as(
+select * ,rank() over(partition by user_id  order by booking_date) as rn1,
+rank() over(partition by user_id  order by booking_date desc ) as rn2
+from  booking_table),
+cte2 as(
+
+select c1.user_id, c1.booking_date as firstdate, c2.booking_date as lastdate from  cte  c1 join 
+cte c2 on 
+c1.user_id =c2.user_id and c1.rn1=1 and c2.rn2=1)
+select *, DATEDIFF(day, firstdate,lastdate) as no_of_days
+from cte2
+
+
+Output:-
+u1	2022-03-23	2022-05-06	44
+u2	2022-03-27	2022-04-28	32
+u4	2022-03-31	2022-05-04	34
+u5	2022-04-06	2022-04-20	14
+u6	2022-04-06	2022-04-22	16
+
+
+Solution4:-
+
+with cte as(
+select b.* ,u.segment
+from  booking_table b
+join user_table  u  on b.user_id=u.user_id
+where booking_date like '2022-%')
+select segment, sum(case when line_of_business='Flight' then 1 else 0 end )as flight_booking,
+sum(case when line_of_business='Hotel' then 1 else 0 end )as Hotel_booking
+from cte
+group by segment
+
+output:-
+s1	8	4
+s2	3	3
+s3	1	1
