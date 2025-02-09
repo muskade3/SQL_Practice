@@ -1,0 +1,70 @@
+
+CREATE TABLE employee_checkin_details (
+    employeeid INT,
+    entry_details VARCHAR(10),
+    timestamp_details DATETIME
+);
+
+INSERT INTO employee_checkin_details (employeeid, entry_details, timestamp_details) VALUES
+(1000, 'login', '2023-06-16 01:00:15.34'),
+(1000, 'login', '2023-06-16 02:00:15.34'),
+(1000, 'login', '2023-06-16 03:00:15.34'),
+(1000, 'logout', '2023-06-16 12:00:15.34'),
+(1001, 'login', '2023-06-16 01:00:15.34'),
+(1001, 'login', '2023-06-16 02:00:15.34'),
+(1001, 'login', '2023-06-16 03:00:15.34'),
+(1001, 'logout', '2023-06-16 12:00:15.34');
+
+
+CREATE TABLE employee_details (
+    employeeid INT,
+    phone_number VARCHAR(15),
+    isdefault TINYINT -- 0 for false, 1 for true
+);
+
+INSERT INTO employee_details (employeeid, phone_number, isdefault) VALUES
+(1001, '9999', 0),
+(1001, '1111', 0),
+(1001, '2222', 1),
+(1003, '3333', 0);
+
+Solution:-
+with cte as(SELECT 
+employeeid, count(employeeid)over(
+    partition by employeeid) as totalcount,
+    case when entry_details='login'
+    then 1 else 0 
+    end as chck, timestamp_details,entry_details,
+    rank() over(partition by employeeid , entry_details order by timestamp_details  desc) as rn1
+FROM  employee_checkin_details),
+cte2 as(
+select employeeid, totalcount, sum(case when chck=1 then 1 else 0 end )as loginsum, 
+sum(case when chck=0 then 1 else 0 end) as logoutsum
+from cte
+group by employeeid ,totalcount),
+cte3 as(
+select employeeid, timestamp_details, entry_details 
+from cte where rn1=1),
+cte4 as(
+
+select c1.employeeid, totalcount, loginsum, logoutsum , 
+case when entry_Details='login' then
+ (select c3.timestamp_details from cte3 c3 where c3.employeeid=c1.employeeid 
+ and c3.entry_details=c2.entry_details) end as logintime,
+case when entry_Details='logout' then
+ (select c3.timestamp_details from cte3 c3 where c3.employeeid=c1.employeeid  and c3.entry_details=c2.entry_details) end as logouttime
+from cte2 c1 join cte3 c2 on c1.employeeid=c2.employeeid),
+cte5 as(
+select  employeeid, totalcount, loginsum, logoutsum , max(logintime) as logintime,max(logouttime) as logouttime
+from cte4 
+group by employeeid, totalcount, loginsum, logoutsum)
+
+select c1.* , e1.phone_number from 
+cte5  c1 left join employee_detailm e1 
+on c1.employeeid=e1.employeeid and isdefault=1
+
+
+
+1000	4	3	1	2023-06-16 03:00:15.340	2023-06-16 12:00:15.340	NULL
+1001	4	3	1	2023-06-16 03:00:15.340	2023-06-16 12:00:15.340	2222
+
