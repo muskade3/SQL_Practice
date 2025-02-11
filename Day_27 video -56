@@ -1,0 +1,71 @@
+script:
+create table job_positions (id  int,
+                                             title varchar(100),
+                                              groups varchar(10),
+                                              levels varchar(10),     
+                                               payscale int, 
+                                               totalpost int );
+ insert into job_positions values (1, 'General manager', 'A', 'l-15', 10000, 1); 
+insert into job_positions values (2, 'Manager', 'B', 'l-14', 9000, 5); 
+insert into job_positions values (3, 'Asst. Manager', 'C', 'l-13', 8000, 10);  
+
+  create table job_employees ( id  int, 
+                                                 name   varchar(100),     
+                                                  position_id  int 
+                                                );  
+  insert into job_employees values (1, 'John Smith', 1); 
+insert into job_employees values (2, 'Jane Doe', 2);
+ insert into job_employees values (3, 'Michael Brown', 2);
+ insert into job_employees values (4, 'Emily Johnson', 2); 
+insert into job_employees values (5, 'William Lee', 3); 
+insert into job_employees values (6, 'Jessica Clark', 3); 
+insert into job_employees values (7, 'Christopher Harris', 3);
+ insert into job_employees values (8, 'Olivia Wilson', 3);
+ insert into job_employees values (9, 'Daniel Martinez', 3);
+ insert into job_employees values (10, 'Sophia Miller', 3)
+
+
+WITH cte AS (
+    SELECT j1.*, 
+           j2.name, 
+           j2.position_id,
+           COUNT(j1.id) OVER (PARTITION BY j1.title) AS cn,
+           totalpost - COUNT(j1.id) OVER (PARTITION BY j1.title) AS diff
+    FROM job_positions j1
+    JOIN job_employees j2 ON j1.id = j2.position_id
+),
+cte2 AS (
+    SELECT title, groups, levels, payscale, totalpost, name, diff 
+    FROM cte
+),
+cte3 as(
+select * , row_number() over( partition by title order by diff) as rn from cte2),
+cte4 as(
+select c1.title, c1.groups, c1.levels, c1.payscale, c1.totalpost, 'vacant' as employee_name from 
+cte3 c1  join cte3 c2 ON
+c1.rn <=c2.diff
+and c1.title=c2.title and c1.name=c2.name)
+select c1.title, c1.groups, c1.levels, c1.payscale, c1.totalpost, name as employee_name from 
+cte2 c1 
+union  all
+select * from cte4
+order by groups, title,payscale, totalpost
+
+
+
+General manager	A	l-15	10000	1	John Smith
+Manager	B	l-14	9000	5	Jane Doe
+Manager	B	l-14	9000	5	Michael Brown
+Manager	B	l-14	9000	5	Emily Johnson
+Manager	B	l-14	9000	5	vacant
+Manager	B	l-14	9000	5	vacant
+Asst. Manager	C	l-13	8000	10	William Lee
+Asst. Manager	C	l-13	8000	10	Jessica Clark
+Asst. Manager	C	l-13	8000	10	Christopher Harris
+Asst. Manager	C	l-13	8000	10	Olivia Wilson
+Asst. Manager	C	l-13	8000	10	Daniel Martinez
+Asst. Manager	C	l-13	8000	10	Sophia Miller
+Asst. Manager	C	l-13	8000	10	vacant
+Asst. Manager	C	l-13	8000	10	vacant
+Asst. Manager	C	l-13	8000	10	vacant
+Asst. Manager	C	l-13	8000	10	vacant
