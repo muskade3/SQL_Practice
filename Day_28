@@ -1,0 +1,38 @@
+video 57
+
+create table namaste_orders
+(
+order_id int,
+city varchar(10),
+sales int
+)
+
+create table namaste_returns
+(
+order_id int,
+return_reason varchar(20),
+)
+
+insert into namaste_orders
+values(1, 'Mysore' , 100),(2, 'Mysore' , 200),(3, 'Bangalore' , 250),(4, 'Bangalore' , 150)
+,(5, 'Mumbai' , 300),(6, 'Mumbai' , 500),(7, 'Mumbai' , 800)
+
+with cte as( 
+select *, rank() over(partition by city order by sales) as rn,
+count(order_id) over(partition by city) as tn,
+case when order_id not in (select order_id from namaste_returns) 
+then 1 else 0 end as checkg
+from namaste_orders),
+cte2 as(
+select * , sum(checkg) over(partition by city) as sumg,
+case when tn=sum(checkg) over(partition by city)then 1 else 0 end as finalcheck
+from cte)
+select city from cte2
+group by city 
+having finalcheck=1
+
+
+
+
+city
+Mysore
