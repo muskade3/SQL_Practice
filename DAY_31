@@ -1,0 +1,41 @@
+Video-59
+here is the script:
+create table sku 
+(
+sku_id int,
+price_date date ,
+price int
+);
+delete from sku;
+insert into sku values 
+(1,'2023-01-01',10)
+,(1,'2023-02-15',15)
+,(1,'2023-03-03',18)
+,(1,'2023-03-27',15)
+,(1,'2023-04-06',20)
+
+Solution:-
+WITH cte AS (
+    SELECT *, 
+           ROW_NUMBER() OVER (PARTITION BY sku_id, YEAR(price_date), MONTH(price_date) ORDER BY price_date DESC) AS rn
+    FROM sku
+),
+cte2 as(
+select  price, sku_id , price_date from sku where DATEPART(day ,price_date)=1
+union all
+SELECT price, sku_id,
+       DATEADD(DAY, 1, EOMONTH(price_date)) AS nextmonth_start 
+FROM cte 
+WHERE rn = 1),
+cte3 as(
+select *, lag(price,1 ,price) over(order by price_date) as new_price,
+abs(price- lag(price,1 ,price) over(order by price_date)) as diff
+from cte2)
+select price_date, new_price, diff from cte3
+
+
+2023-01-01	10	0
+2023-02-01	10	0
+2023-03-01	15	5
+2023-04-01	15	0
+2023-05-01	20	5
