@@ -1,0 +1,44 @@
+
+CREATE TABLE city_distance
+(
+    distance INT,
+    source VARCHAR(512),
+    destination VARCHAR(512)
+);
+
+delete from city_distance;
+INSERT INTO city_distance(distance, source, destination) VALUES ('100', 'New Delhi', 'Panipat');
+INSERT INTO city_distance(distance, source, destination) VALUES ('200', 'Ambala', 'New Delhi');
+INSERT INTO city_distance(distance, source, destination) VALUES ('150', 'Bangalore', 'Mysore');
+INSERT INTO city_distance(distance, source, destination) VALUES ('150', 'Mysore', 'Bangalore');
+INSERT INTO city_distance(distance, source, destination) VALUES ('250', 'Mumbai', 'Pune');
+INSERT INTO city_distance(distance, source, destination) VALUES ('250', 'Pune', 'Mumbai');
+INSERT INTO city_distance(distance, source, destination) VALUES ('2500', 'Chennai', 'Bhopal');
+INSERT INTO city_distance(distance, source, destination) VALUES ('2500', 'Bhopal', 'Chennai');
+INSERT INTO city_distance(distance, source, destination) VALUES ('60', 'Tirupati', 'Tirumala');
+INSERT INTO city_distance(distance, source, destination) VALUES ('80', 'Tirumala', 'Tirupati');
+
+
+with cte as(
+select c1.source , c1.destination , c1.distance from city_distance c1 
+join city_distance c2 on c1.destination=c2.source and c1.distance =c2.distance),
+cte2 as(
+select *,  row_number() over() as rn 
+from cte),
+cte3 as(
+    select *, rank() over(partition by distance order by  rn) as dm 
+    from cte2
+)
+select source, destination, distance from city_distance where source not in (select source from cte3) and 
+destination not in (select destination from cte3  )
+union all
+select source, destination, distance from cte3 where dm=1
+
+source	destination	distance
+New Delhi	Panipat	100
+Ambala	New Delhi	200
+Tirupati	Tirumala	60
+Tirumala	Tirupati	80
+Bangalore	Mysore	150
+Mumbai	Pune	250
+Chennai	Bhopal	2500
