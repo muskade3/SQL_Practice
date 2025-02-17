@@ -1,0 +1,49 @@
+Video:66
+Scrip: create table cases
+(
+month int,
+cases_count int
+)
+
+insert into cases values (1,1747)
+insert into cases values (2,1516)
+insert into cases values (3,1686)
+insert into cases values (4,1866)
+insert into cases values (5,1493)
+insert into cases values (6,1324)
+insert into cases values (7,1416)
+insert into cases values (8,1898)
+insert into cases values (9,1524)
+insert into cases values (10,1948)
+insert into cases values (11,1703)
+insert into cases values (12,1780)
+
+Solution:-
+with cte as(
+select  c.*, c1.month as priormonth, c1.cases_count as priorcount from casem  c join  casem c1
+on c.month>c1.month)
+,cte2 as(
+select month , cases_count, 0 as totalsum 
+from casem where month not in (select month from cte)
+union all
+select month, cases_count, sum(priorcount) as totalsum
+from cte
+group by month , cases_count )
+select * , cases_count *100.0 /totalsum  as percentage
+from cte2
+
+
+month	cases_count	totalsum	percentage
+1	1747	0	
+2	1516	1747	86.77733257012021
+3	1686	3263	51.67024210848912
+4	1866	4949	37.70458678520913
+5	1493	6815	21.907556859867938
+6	1324	8308	15.936446798266731
+7	1416	9632	14.700996677740864
+8	1898	11048	17.17958001448226
+9	1524	12946	11.771975899891858
+10	1948	14470	13.46233586731168
+11	1703	16418	10.372761603118528
+12	1780	18121	9.82285745819767
+
