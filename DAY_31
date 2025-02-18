@@ -1,6 +1,6 @@
 Video-59
 here is the script:
-create table sku 
+create table sku
 (
 sku_id int,
 price_date date ,
