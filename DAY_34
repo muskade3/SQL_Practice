@@ -1,0 +1,102 @@
+Create table If Not Exists Movies (movie_id int, title varchar(30))
+Create table If Not Exists Users (user_id int, name varchar(30))
+Create table If Not Exists MovieRating (movie_id int, user_id int, rating int, created_at date)
+Truncate table Movies
+insert into Movies (movie_id, title) values ('1', 'Avengers')
+insert into Movies (movie_id, title) values ('2', 'Frozen 2')
+insert into Movies (movie_id, title) values ('3', 'Joker')
+Truncate table Users
+insert into Users (user_id, name) values ('1', 'Daniel')
+insert into Users (user_id, name) values ('2', 'Monica')
+insert into Users (user_id, name) values ('3', 'Maria')
+insert into Users (user_id, name) values ('4', 'James')
+Truncate table MovieRating
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '1', '3', '2020-01-12')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '2', '4', '2020-02-11')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '3', '2', '2020-02-12')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '4', '1', '2020-01-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '1', '5', '2020-02-17')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '2', '2', '2020-02-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '3', '2', '2020-03-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('3', '1', '3', '2020-02-22')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('3', '2', '4', '2020-02-25')
+
+
+
+with cte as(SELECT u.user_id, u.name,
+m.movie_id, m.rating, m.created_at , count(distinct m.movie_id) as cn
+from users u join MovieRating  m
+on u.user_id=m.user_id
+group by u.user_id
+order by name
+),
+cte2 as(
+select name,dense_rank() over(order by cn desc) as rn1 ,
+
+cn  from cte),
+cte3 as(
+select name as results from cte2 
+where rn1=1),
+cte4 as(
+    select results, dense_rank() over( order by results) as rn2 from cte3
+),
+cte5 as(
+    select results from cte4 where rn2=1
+),
+cte6 as(
+select m.movie_id,m.title, m1.rating, m1.created_at,
+avg(m1.rating) as av
+from Movies m
+join MovieRating m1
+on m.movie_id=m1.movie_id
+where m1.created_at like '2020-02%'
+group by m.movie_id),
+cte7 as(
+
+select title,dense_rank() over(order by av desc) as rn1 
+  from cte6),
+  cte8 as(
+
+select title
+  from cte7 where rn1=1),
+  cte9 as(
+  select title, dense_rank() over(order by title) as rn2
+  from cte8)
+  select results from cte5 
+  union all
+  select title from cte9 where rn2=1
+
+
+| movie_id | title    |
+| -------- | -------- |
+| 1        | Avengers |
+| 2        | Frozen 2 |
+| 3        | Joker    |
+
+
+| user_id | name   |
+| ------- | ------ |
+| 1       | Daniel |
+| 2       | Monica |
+| 3       | Maria  |
+| 4       | James  |
+
+
+
+| movie_id | user_id | rating | created_at |
+| -------- | ------- | ------ | ---------- |
+| 1        | 1       | 3      | 2020-01-12 |
+| 1        | 2       | 4      | 2020-02-11 |
+| 1        | 3       | 2      | 2020-02-12 |
+| 1        | 4       | 1      | 2020-01-01 |
+| 2        | 1       | 5      | 2020-02-17 |
+| 2        | 2       | 2      | 2020-02-01 |
+| 2        | 3       | 2      | 2020-03-01 |
+| 3        | 1       | 3      | 2020-02-22 |
+| 3        | 2       | 4      | 2020-02-25 |
+
+
+| results  |
+| -------- |
+| Daniel   |
+| Frozen 2 |
