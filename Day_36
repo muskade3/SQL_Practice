@@ -1,0 +1,35 @@
+Create table If Not Exists Employee (id int, name varchar(255), department varchar(255), managerId int)
+Truncate table Employee
+insert into Employee (id, name, department, managerId) values ('101', 'John', 'A', NULL)
+insert into Employee (id, name, department, managerId) values ('102', 'Dan', 'A', '101')
+insert into Employee (id, name, department, managerId) values ('103', 'James', 'A', '101')
+insert into Employee (id, name, department, managerId) values ('104', 'Amy', 'A', '101')
+insert into Employee (id, name, department, managerId) values ('105', 'Anne', 'A', '101')
+insert into Employee (id, name, department, managerId) values ('106', 'Ron', 'B', '101')
+
+# Write your MySQL query statement below
+with cte as(
+select e.id, e.name  as empname,
+e1.managerid as manid, e1.name 
+from employee e join employee e1 
+on e.id=e1.managerid),
+cte2 as(
+select empname , count(*)
+from cte 
+
+| id  | name  | department | managerId |
+| --- | ----- | ---------- | --------- |
+| 101 | John  | A          | null      |
+| 102 | Dan   | A          | 101       |
+| 103 | James | A          | 101       |
+| 104 | Amy   | A          | 101       |
+| 105 | Anne  | A          | 101       |
+| 106 | Ron   | B          | 101       |
+
+| name |
+| ---- |
+| John |
+
+| name |
+| ---- |
+| John |
