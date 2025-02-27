@@ -1,0 +1,43 @@
+
+create table icc_world_cup
+(
+Team_1 Varchar(20),
+Team_2 Varchar(20),
+Winner Varchar(20)
+);
+INSERT INTO icc_world_cup values('India','SL','India');
+INSERT INTO icc_world_cup values('SL','Aus','Aus');
+INSERT INTO icc_world_cup values('SA','Eng','Eng');
+INSERT INTO icc_world_cup values('Eng','NZ','NZ');
+INSERT INTO icc_world_cup values('Aus','India','India');
+
+
+
+with cte as( 
+  select * , case when team_1==winner then 1 else 0 end as team1win,
+case when team_2==winner then 1 else 0 end as team2win
+   from icc_world_cup),
+cte2 as(
+select team_1 , team1win from 
+cte
+union   all
+select team_2 , team2win from 
+  cte)
+select team_1 as team ,count(*) as totcount, sum(team1win) as win,count(*) -sum(team1win) as losser
+ from cte2 
+ group by team_1
+
+team	totcount	win	losser
+Aus	2	1	1
+Eng	2	1	1
+India	2	2	0
+NZ	1	1	0
+SA	1	0	1
+SL	2	0	2
+
+
+
+
+
+
+
