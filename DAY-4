@@ -12,7 +12,6 @@ else
 end )as median 
 from cte
 
-
 other Sol:-
 select *, percentile_cont(0.5) within group (order by id) over() as median 
 from mode 
